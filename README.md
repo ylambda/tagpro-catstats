@@ -6,7 +6,7 @@ Save a tagpro scoreboard to `csv`
 
 To install:
 
-* Download the [tagpro-catstats.crx](https://github.com/brainss/tagpro-catstats/blob/master/tagpro-catstats.crx?raw=true) file
+* Download the [tagpro-catstats.crx](https://github.com/brainss/tagpro-catstats/blob/master/tagpro-catstats.crx?raw=true) file (right click; save as)
 * Open `tools->extensions` in chrome/chromium
 * Drag and drop `tagpro-catstats.crx` onto the extensions page
 * Click add
