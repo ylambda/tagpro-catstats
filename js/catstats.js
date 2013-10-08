@@ -8,11 +8,8 @@ catstats = (function(catstats) {
   }
 
   function setup() {
-    console.log('setup');
     tagpro.socket.on('map', function() {
-    console.log('map');
       $(document).ready(function() {
-    console.log('ready');
         $el = $('#options').find('table');
         $export = $('<a>', {href: '#'}).text('Save as .csv').click(exportCSV);
         $export.insertAfter($el);
