@@ -1,5 +1,7 @@
 catstats = (function(catstats) {
 
+  var stats = null;
+
   init();
   function init () {
     if (window.tagpro && tagpro.socket && window.jQuery)
@@ -11,15 +13,28 @@ catstats = (function(catstats) {
     tagpro.socket.on('map', function() {
       $(document).ready(function() {
         $el = $('#options').find('table');
-        $export = $('<a>', {href: '#'}).text('Save as .csv').click(exportCSV);
+        $export = $('<a>', {href: '#'})
+          .text('Save as .csv')
+          .click(registerExport);
         $export.insertAfter($el);
       })
     })
+
+    tagpro.socket.on('end', recordStats);
   }
 
-  function exportCSV() {
+  function registerExport() {
+    if(stats)
+      return exportCSV();
+
+    tagpro.socket.on('end', function() {
+      exportCSV();
+    })
+  }
+
+  function recordStats() {
     var players = Object.keys(tagpro.players);
-    var scores = players.map(function(id) {
+    stats = players.map(function(id) {
       var p = tagpro.players[id];
       return {
         name:     p['name']       || '',
@@ -33,14 +48,19 @@ catstats = (function(catstats) {
         support:  p['s-support']  || 0
       }
     })
+  }
+
+  function exportCSV() {
+    var file = csv(stats);
 
     var a = document.createElement('a');
     a.download = 'tagpro-'+Date.now()+'.csv';
-    a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv(scores))
+    a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(file)
 
     var event = document.createEvent('MouseEvents')
     event.initEvent('click', true, false);
 
+    // trigger download
     a.dispatchEvent(event);
   }
 
