@@ -13,7 +13,9 @@ To install:
 
 ### Usage
 
-On the scoreboard a new link will appear to `Save as .csv`
-Click this at anytime to save the scoreboard
+On the scoreboard a new link will appear to `Save as .csv` Click this at
+anytime to automatically save the scoreboard when the game ends. If a
+player leaves at the end before you save, the scoreboard will still save
+his/her stats.
 
 This `csv` file can be imported into a spreadsheet.
