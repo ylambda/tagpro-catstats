@@ -37,15 +37,17 @@ catstats = (function(catstats) {
     stats = players.map(function(id) {
       var p = tagpro.players[id];
       return {
-        name:     p['name']       || '',
-        score:    p['score']      || 0,
-        tags:     p['s-tags']     || 0,
-        pops:     p['s-pops']     || 0,
-        grabs:    p['s-grabs']    || 0,
-        drops:    p['s-drops']    || 0,
-        captures: p['s-captures'] || 0,
-        returns:  p['s-returns']  || 0,
-        support:  p['s-support']  || 0
+        'name':             p['name']       || '',
+        'score':            p['score']      || 0,
+        'tags':             p['s-tags']     || 0,
+        'pops':             p['s-pops']     || 0,
+        'grabs':            p['s-grabs']    || 0,
+        'drops':            p['s-drops']    || 0,
+        'captures':         p['s-captures'] || 0,
+        'returns':          p['s-returns']  || 0,
+        'support':          p['s-support']  || 0,
+        'team captures':    p.team == 1 ? tagpro.score.r : tagpro.score.b,
+        'opponent captures': p.team == 1 ? tagpro.score.b : tagpro.score.r
       }
     })
   }
