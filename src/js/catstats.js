@@ -12,8 +12,8 @@ catstats = (function(catstats) {
   function setup() {
     tagpro.socket.on('map', function() {
       $(document).ready(function() {
-        $el = $('#options').find('table');
-        $export = $('<a>', {href: '#'})
+        var $el = $('#options').find('table');
+        var $export = $('<a>', {href: '#', id: 'saveAsCSVLink'})
           .text('Save as .csv')
           .click(registerExport);
         $export.insertAfter($el);
@@ -30,6 +30,11 @@ catstats = (function(catstats) {
     tagpro.socket.on('end', function() {
       exportCSV();
     })
+
+    $('#saveAsCSVLink')
+      .off()
+      .text('Scoreboard will be saved when game ends!')
+      .css('cursor', 'default')
   }
 
   function recordStats() {
