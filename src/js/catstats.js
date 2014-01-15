@@ -1,6 +1,7 @@
 catstats = (function(catstats) {
 
   var stats = null;
+  var playerStats = {};
 
   init();
   function init () {
@@ -18,8 +19,30 @@ catstats = (function(catstats) {
           .click(registerExport);
         $export.insertAfter($el);
       })
-    })
+    });
+	
+    tagpro.socket.on("p", function (e) {
+      e = e.u || e;
+      for(var t=0,r=e.length;t!=r;t++)
+      {
+        var	i=e[t],
+        s=playerStats[i.id];
+        s||(s=i,playerStats[s.id]=s, playerStats[s.id]["arrival"]= tagpro.gameEndsAt - (new Date).getTime());
+        for(var f in i)
+        {
+          s[f]=i[f];
+        }
+      }
+    });
+    tagpro.socket.on("playerLeft",function(e) {
+      if(tagpro.state == 2)return;
+      playerStats[e]["departure"] = tagpro.gameEndsAt - (new Date).getTime();
+	});
 
+    tagpro.socket.on("time",function(e) {
+      if(tagpro.state == 2)return;
+      for(var p in playerStats) playerStats[p]["arrival"] = e.time;
+    });
     tagpro.socket.on('end', recordStats);
   }
 
@@ -38,9 +61,9 @@ catstats = (function(catstats) {
   }
 
   function recordStats() {
-    var players = Object.keys(tagpro.players);
+    var players = Object.keys(playerStats);
     stats = players.map(function(id) {
-      var p = tagpro.players[id];
+      var p = playerStats[id];
       return {
         'name':             p['name']       || '',
         'score':            p['score']      || 0,
@@ -48,13 +71,15 @@ catstats = (function(catstats) {
         'pops':             p['s-pops']     || 0,
         'grabs':            p['s-grabs']    || 0,
         'drops':            p['s-drops']    || 0,
-        'hold':             tagpro.helpers.timeFromSeconds(p['s-hold'], true),
+        'hold':             p['s-hold']     || 0,
         'captures':         p['s-captures'] || 0,
-        'prevent':          tagpro.helpers.timeFromSeconds(p['s-prevent'], true),
+        'prevent':          p['s-prevent']  || 0,
         'returns':          p['s-returns']  || 0,
         'support':          p['s-support']  || 0,
         'team captures':    p.team == 1 ? tagpro.score.r : tagpro.score.b,
-        'opponent captures': p.team == 1 ? tagpro.score.b : tagpro.score.r
+        'opponent captures': p.team == 1 ? tagpro.score.b : tagpro.score.r,
+        'arrival':          p['arrival']    || 0,
+        'departure':        p['departure']  || 0
       }
     })
   }
@@ -95,6 +120,7 @@ catstats = (function(catstats) {
   }
 
   catstats.exportCSV = exportCSV;
+  catstats.playerStats = playerStats;
 
   return catstats
 
