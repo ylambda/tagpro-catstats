@@ -124,7 +124,7 @@ catstats = (function(catstats) {
   }
 
   catstats.exportCSV = exportCSV;
-  catstats.playerStats = playerStats;
+  catstats.players = players;
 
   return catstats
 
