@@ -20,24 +20,28 @@ catstats = (function(catstats) {
         $export.insertAfter($el);
       })
     });
-	
-    tagpro.socket.on("p", function (e) {
-      e = e.u || e;
-      for(var t=0,r=e.length;t!=r;t++)
-      {
-        var	i=e[t],
-        s=playerStats[i.id];
-        s||(s=i,playerStats[s.id]=s, playerStats[s.id]["arrival"]= tagpro.gameEndsAt - (new Date).getTime());
-        for(var f in i)
-        {
-          s[f]=i[f];
+
+    tagpro.socket.on("p", function (data) {
+      data = data.u || data;
+      for(var i = 0; i < data.length; i++) {
+        var player = data[i];
+        var stats = playerStats[player.id];
+
+        if(!stats) {
+          stats = playerStats[player.id] = player;
+          stats['arrival'] = tagpro.gameEndsAt - Date.now();
+        }
+
+        for(var stat in player) {
+          stats[stat] = player[stat];
         }
       }
     });
+
     tagpro.socket.on("playerLeft",function(e) {
       if(tagpro.state == 2)return;
       playerStats[e]["departure"] = tagpro.gameEndsAt - (new Date).getTime();
-	});
+    })
 
     tagpro.socket.on("time",function(e) {
       if(tagpro.state == 2)return;
