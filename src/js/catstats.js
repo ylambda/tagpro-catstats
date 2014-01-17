@@ -39,13 +39,21 @@ catstats = (function(catstats) {
     });
 
     tagpro.socket.on("playerLeft",function(playerId) {
-      if(tagpro.state == 2) return;
-      players[playerId]["departure"] = tagpro.gameEndsAt - (new Date).getTime();
+	  switch (tagpro.state) {
+	    case 1: //During the game
+		  players[playerId]["departure"] = tagpro.gameEndsAt - Date.now();
+		break;
+		case 3: //Before the game
+		  delete players[playerId];
+		break;
+		default:
+		break;
+	  }
     });
 
     tagpro.socket.on("time",function(e) {
-      if(tagpro.state == 2) return;
-      for(var playerId in players) players[playerId]["arrival"] = e.time;
+      if(tagpro.state == 2) return; //Probably unneeded
+      for(var playerId in players) players[playerId]["arrival"] = e.time; //players who were there before the game started have their arrival time set to the time when the game started
     });
     tagpro.socket.on('end', recordStats);
   }
