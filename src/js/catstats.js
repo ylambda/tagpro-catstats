@@ -39,16 +39,16 @@ catstats = (function(catstats) {
     });
 
     tagpro.socket.on("playerLeft",function(playerId) {
-	  switch (tagpro.state) {
-	    case 1: //During the game
-		  players[playerId]["departure"] = tagpro.gameEndsAt - Date.now();
-		break;
-		case 3: //Before the game
-		  delete players[playerId];
-		break;
-		default:
-		break;
-	  }
+	    switch (tagpro.state) {
+	      case 1: //During the game
+		      players[playerId]["departure"] = tagpro.gameEndsAt - Date.now();
+		    break;
+		    case 3: //Before the game
+		      delete players[playerId];
+		    break;
+		    default:
+		    break;
+	    }
     });
 
     tagpro.socket.on("time",function(e) {
