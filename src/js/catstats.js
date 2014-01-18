@@ -1,7 +1,7 @@
 catstats = (function(catstats) {
 
   var stats = null;
-  var playerStats = {};
+  var players = {};
 
   init();
   function init () {
@@ -21,31 +21,39 @@ catstats = (function(catstats) {
       })
     });
 
-    tagpro.socket.on("p", function (data) {
-      data = data.u || data;
-      for(var i = 0; i < data.length; i++) {
-        var player = data[i];
-        var stats = playerStats[player.id];
+    tagpro.socket.on("p", function (newData) {
+      newData = newData.u || newData;
+      for(var i = 0; i < newData.length; i++) {
+        var playerNewData = newData[i];
+        var player = players[playerNewData.id];
 
-        if(!stats) {
-          stats = playerStats[player.id] = player;
-          stats['arrival'] = tagpro.gameEndsAt - Date.now();
+        if(!player) {
+          player = players[playerNewData.id] = playerNewData;
+          player['arrival'] = tagpro.gameEndsAt - Date.now();
         }
 
-        for(var stat in player) {
-          stats[stat] = player[stat];
+        for(var statName in playerNewData) {
+          player[statName] = playerNewData[statName];
         }
       }
     });
 
-    tagpro.socket.on("playerLeft",function(e) {
-      if(tagpro.state == 2)return;
-      playerStats[e]["departure"] = tagpro.gameEndsAt - (new Date).getTime();
-    })
+    tagpro.socket.on("playerLeft",function(playerId) {
+	    switch (tagpro.state) {
+	      case 1: //During the game
+		      players[playerId]["departure"] = tagpro.gameEndsAt - Date.now();
+		    break;
+		    case 3: //Before the game
+		      delete players[playerId];
+		    break;
+		    default:
+		    break;
+	    }
+    });
 
     tagpro.socket.on("time",function(e) {
-      if(tagpro.state == 2)return;
-      for(var p in playerStats) playerStats[p]["arrival"] = e.time;
+      if(tagpro.state == 2) return; //Probably unneeded
+      for(var playerId in players) players[playerId]["arrival"] = e.time; //players who were there before the game started have their arrival time set to the time when the game started
     });
     tagpro.socket.on('end', recordStats);
   }
@@ -65,25 +73,25 @@ catstats = (function(catstats) {
   }
 
   function recordStats() {
-    var players = Object.keys(playerStats);
-    stats = players.map(function(id) {
-      var p = playerStats[id];
+    var playerIds = Object.keys(players);
+    stats = playerIds.map(function(id) {
+      var player = players[id];
       return {
-        'name':             p['name']       || '',
-        'score':            p['score']      || 0,
-        'tags':             p['s-tags']     || 0,
-        'pops':             p['s-pops']     || 0,
-        'grabs':            p['s-grabs']    || 0,
-        'drops':            p['s-drops']    || 0,
-        'hold':             p['s-hold']     || 0,
-        'captures':         p['s-captures'] || 0,
-        'prevent':          p['s-prevent']  || 0,
-        'returns':          p['s-returns']  || 0,
-        'support':          p['s-support']  || 0,
-        'team captures':    p.team == 1 ? tagpro.score.r : tagpro.score.b,
-        'opponent captures': p.team == 1 ? tagpro.score.b : tagpro.score.r,
-        'arrival':          p['arrival']    || 0,
-        'departure':        p['departure']  || 0
+        'name':              player['name']       || '',
+        'score':             player['score']      || 0,
+        'tags':              player['s-tags']     || 0,
+        'pops':              player['s-pops']     || 0,
+        'grabs':             player['s-grabs']    || 0,
+        'drops':             player['s-drops']    || 0,
+        'hold':              player['s-hold']     || 0,
+        'captures':          player['s-captures'] || 0,
+        'prevent':           player['s-prevent']  || 0,
+        'returns':           player['s-returns']  || 0,
+        'support':           player['s-support']  || 0,
+        'team captures':     player.team == 1 ? tagpro.score.r : tagpro.score.b,
+        'opponent captures': player.team == 1 ? tagpro.score.b : tagpro.score.r,
+        'arrival':           player['arrival']    || 0,
+        'departure':         player['departure']  || 0
       }
     })
   }
@@ -124,7 +132,7 @@ catstats = (function(catstats) {
   }
 
   catstats.exportCSV = exportCSV;
-  catstats.playerStats = playerStats;
+  catstats.players = players;
 
   return catstats
 
