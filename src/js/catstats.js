@@ -11,14 +11,12 @@ catstats = (function(catstats) {
   }
 
   function setup() {
-    tagpro.socket.on('map', function() {
-      $(document).ready(function() {
-        var $el = $('#options').find('table');
-        var $export = $('<a>', {href: '#', id: 'saveAsCSVLink'})
-          .text('Save as .csv')
-          .click(registerExport);
-        $export.insertAfter($el);
-      })
+    $(document).ready(function() {
+      var $el = $('#options').find('table');
+      var $export = $('<a>', {href: '#', id: 'saveAsCSVLink'})
+        .text('Save as .csv')
+        .click(registerExport);
+      $export.insertAfter($el);
     });
 
     tagpro.socket.on("p", function (newData) {
