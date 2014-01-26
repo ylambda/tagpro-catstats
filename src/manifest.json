@@ -6,7 +6,7 @@
   "permissions": [],
   "content_scripts": [
     {
-      "matches": ["http://*.koalabeast.com/*"],
+      "matches": ["http://*.koalabeast.com/*", "http://*.jukejuice.com/*"],
       "js": ["main.js"],
       "run_at": "document_start"
     }
