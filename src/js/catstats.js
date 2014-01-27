@@ -18,10 +18,13 @@ catstats = (function(catstats) {
         .click(registerExport);
       $export.insertAfter($el);
     });
-	
+    
     function updateStatsAfterDeparture (player, now) {
       var now = now || Date.now();
       player["departure"] = tagpro.gameEndsAt - now;
+      player["minutes"] = Math.round((player["arrival"]-player["departure"])/6000)/10;
+      var difnow = player["team"] == 1 ? (tagpro.score.r - tagpro.score.b) : (tagpro.score.b - tagpro.score.r)
+      player['diftotal'] += difnow - player['difstart'];
       if (player['bombtr']) {
         player['bombtime'] += now - player['bombstart'];
         player['bombtr'] = false;
@@ -39,6 +42,8 @@ catstats = (function(catstats) {
         player['speedtr'] = false;
       }
     }
+    
+    function isEmpty(object) { for(var i in object) { return false; } return true; }
 
     tagpro.socket.on("p", function (newData) {
       newData = newData.u || newData;
@@ -58,6 +63,8 @@ catstats = (function(catstats) {
           player['tagprotr'] = false;
           player['griptr'] = false;
           player['speedtr'] = false;
+          player['diftotal'] = 0;
+          player['difstart'] = "unknown";
         }
 
         for(var statName in playerNewData) {
@@ -71,10 +78,29 @@ catstats = (function(catstats) {
               player[statName+ "tr"] = false;
             }
           }
+          if (statName == 'team') {
+            if (player['difstart'] != "unknown" ) {
+              var difnow = player["previousteam"] == 1 ? (tagpro.score.r - tagpro.score.b) : (tagpro.score.b - tagpro.score.r);
+              player['diftotal'] += difnow - player['difstart'];
+              player['difstart'] = playerNewData["team"] == 1 ? (tagpro.score.r - tagpro.score.b) : (tagpro.score.b - tagpro.score.r);
+            }
+            else if (! isEmpty(tagpro.score)) {
+              player['difstart'] = playerNewData["team"] == 1 ? (tagpro.score.r - tagpro.score.b) : (tagpro.score.b - tagpro.score.r);
+            }
+            else {
+              tagpro.socket.on("score",function(e) {
+                if (player['difstart'] == "unknown" ) {
+                  player['difstart'] = playerNewData["team"] == 1 ? (tagpro.score.r - tagpro.score.b) : (tagpro.score.b - tagpro.score.r);
+                }
+              });
+            }
+            player["previousteam"] = playerNewData["team"];
+          }
           player[statName] = playerNewData[statName];
         }
       }
     });
+
 
     tagpro.socket.on("playerLeft",function(playerId) {
       switch (tagpro.state) {
@@ -120,6 +146,8 @@ catstats = (function(catstats) {
       var player = players[id];
       return {
         'name':              player['name']       || '',
+        'plusminus':         player['diftotal']   || 0,
+        'minutes':           player['minutes']    || 0,
         'score':             player['score']      || 0,
         'tags':              player['s-tags']     || 0,
         'pops':              player['s-pops']     || 0,
