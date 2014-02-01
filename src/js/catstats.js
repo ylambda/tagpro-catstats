@@ -21,10 +21,8 @@ catstats = (function(catstats) {
     
     function updateStatsAfterDeparture (player, now) {
       var now = now || Date.now();
-      player["departure"] = tagpro.gameEndsAt - now;
-      player["minutes"] = Math.round((player["arrival"]-player["departure"])/6000)/10;
-      var difnow = player["team"] == 1 ? (tagpro.score.r - tagpro.score.b) : (tagpro.score.b - tagpro.score.r)
-      player['diftotal'] += difnow - player['difstart'];
+      player['departure'] = tagpro.gameEndsAt - now;
+      player['minutes'] = Math.round((player['arrival']-player['departure'])/6000)/10;
       if (player['bombtr']) {
         player['bombtime'] += now - player['bombstart'];
         player['bombtr'] = false;
@@ -45,7 +43,7 @@ catstats = (function(catstats) {
     
     function isEmpty(object) { for(var i in object) { return false; } return true; }
 
-    tagpro.socket.on("p", function (newData) {
+    tagpro.socket.on('p', function (newData) {
       newData = newData.u || newData;
       for(var i = 0; i < newData.length; i++) {
         var playerNewData = newData[i];
@@ -53,7 +51,8 @@ catstats = (function(catstats) {
         var now = Date.now();
 
         if(!player) {
-          player = players[playerNewData.id] = playerNewData;
+          players[playerNewData.id] = {};
+          player = players[playerNewData.id];
           player['arrival'] = tagpro.gameEndsAt - now;
           player['bombtime'] = 0;
           player['tagprotime'] = 0;
@@ -64,45 +63,47 @@ catstats = (function(catstats) {
           player['griptr'] = false;
           player['speedtr'] = false;
           player['diftotal'] = 0;
-          player['difstart'] = "unknown";
+          updatePlayerData(tagpro.players[playerNewData.id]);
+        }
+        else {
+          updatePlayerData(playerNewData);
         }
 
-        for(var statName in playerNewData) {
-          if (statName == 'bomb' || statName == 'tagpro' || statName == 'grip' || statName == 'speed') {
-            if (playerNewData[statName] && ! player[statName + "tr"]) { // the player has the statName powerup and we aren't tracking the amount of time with that powerup yet
-              player[statName+ "tr"] = true;
-              player[statName + 'start'] = now;
+        function updatePlayerData (playerNewData)
+        {
+          for(var statName in playerNewData) {
+            if (statName == 'bomb' || statName == 'tagpro' || statName == 'grip' || statName == 'speed') {
+              if (playerNewData[statName] && ! player[statName + 'tr']) { // the player has the statName powerup and we aren't tracking the amount of time with that powerup yet
+                player[statName+ 'tr'] = true;
+                player[statName + 'start'] = now;
+              }
+              if (! playerNewData[statName] && player[statName + 'tr']) { // the player hasn't the statName powerup and we were tracking the amount of time with that power up.
+                player[statName + 'time'] += now - player[statName + 'start'];
+                player[statName+ 'tr'] = false;
+              }
             }
-            if (! playerNewData[statName] && player[statName + "tr"]) { // the player hasn't the statName powerup and we were tracking the amount of time with that power up.
-              player[statName + 'time'] += now - player[statName + 'start'];
-              player[statName+ "tr"] = false;
-            }
+            player[statName] = playerNewData[statName];
           }
-          if (statName == 'team') {
-            if (player['difstart'] != "unknown" ) {
-              var difnow = player["previousteam"] == 1 ? (tagpro.score.r - tagpro.score.b) : (tagpro.score.b - tagpro.score.r);
-              player['diftotal'] += difnow - player['difstart'];
-              player['difstart'] = playerNewData["team"] == 1 ? (tagpro.score.r - tagpro.score.b) : (tagpro.score.b - tagpro.score.r);
-            }
-            else if (! isEmpty(tagpro.score)) {
-              player['difstart'] = playerNewData["team"] == 1 ? (tagpro.score.r - tagpro.score.b) : (tagpro.score.b - tagpro.score.r);
-            }
-            else {
-              tagpro.socket.on("score",function(e) {
-                if (player['difstart'] == "unknown" ) {
-                  player['difstart'] = playerNewData["team"] == 1 ? (tagpro.score.r - tagpro.score.b) : (tagpro.score.b - tagpro.score.r);
-                }
-              });
-            }
-            player["previousteam"] = playerNewData["team"];
-          }
-          player[statName] = playerNewData[statName];
         }
       }
     });
+    
+    var scoreRedTeam  = 0;
+    var scoreBlueTeam = 0;
+    
+    tagpro.socket.on('score', function (e) {
+      var incrementScoreRedTeam  = e.r - scoreRedTeam;
+      var incrementScoreBlueTeam = e.b - scoreBlueTeam;
+      for(var playerId in tagpro.players) {
+        var player = players[playerId];
+        player['diftotal'] += player.team == 1 ? incrementScoreRedTeam - incrementScoreBlueTeam : incrementScoreBlueTeam - incrementScoreRedTeam;
+      }
+      scoreRedTeam = e.r;
+      scoreBlueTeam = e.b;
+    });
 
 
-    tagpro.socket.on("playerLeft",function(playerId) {
+    tagpro.socket.on('playerLeft',function(playerId) {
       switch (tagpro.state) {
         case 1: //During the game
           updateStatsAfterDeparture(players[playerId]);
@@ -115,9 +116,9 @@ catstats = (function(catstats) {
       }
     });
 
-    tagpro.socket.on("time",function(e) {
+    tagpro.socket.on('time',function(e) {
       if(tagpro.state == 2) return; //Probably unneeded
-      for(var playerId in players) players[playerId]["arrival"] = e.time; //players who were there before the game started have their arrival time set to the time when the game started
+      for(var playerId in players) players[playerId]['arrival'] = e.time; //players who were there before the game started have their arrival time set to the time when the game started
     });
     tagpro.socket.on('end', function () {
       var now = Date.now();
