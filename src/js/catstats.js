@@ -80,7 +80,6 @@ catstats = (function(catstats) {
                 player[statName+ 'tr'] = false;
               }
             }
-            player[statName] = playerNewData[statName];
           }
         }
       }
