@@ -192,6 +192,8 @@ catstats = (function(catstats) {
 
     // trigger download
     a.dispatchEvent(event);
+
+    (window.URL || window.webkitURL).revokeObjectURL(a.href);
   }
 
   function csv(array) {
