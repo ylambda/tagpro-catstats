@@ -180,17 +180,20 @@ catstats = (function(catstats) {
   }
 
   function exportCSV() {
-    var file = csv(stats);
+    var fileContent = csv(stats);
+    var file = new Blob([fileContent], {type: "data:text/csv;charset=utf-8"});
 
     var a = document.createElement('a');
     a.download = 'tagpro-'+Date.now()+'.csv';
-    a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(file)
+    a.href = (window.URL || window.webkitURL).createObjectURL(file);
 
-    var event = document.createEvent('MouseEvents')
+    var event = document.createEvent('MouseEvents');
     event.initEvent('click', true, false);
 
     // trigger download
     a.dispatchEvent(event);
+
+    (window.URL || window.webkitURL).revokeObjectURL(a.href);
   }
 
   function csv(array) {
