@@ -167,6 +167,7 @@ catstats = (function(catstats) {
         'prevent':           player['s-prevent']  || 0,
         'returns':           player['s-returns']  || 0,
         'support':           player['s-support']  || 0,
+        'team':              player.team          || 0,
         'team captures':     player.team == 1 ? tagpro.score.r : tagpro.score.b,
         'opponent captures': player.team == 1 ? tagpro.score.b : tagpro.score.r,
         'arrival':           player['arrival']    || 0,
