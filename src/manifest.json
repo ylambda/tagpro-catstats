@@ -1,7 +1,7 @@
 {
   "name": "tagpro-catstats",
-  "description": "lambda's catstat collector",
-  "version": "0.0.5",
+  "description": "lambda's catstat collector, mods by P0P",
+  "version": "1.0.0",
   "manifest_version": 2,
   "permissions": [],
   "content_scripts": [
@@ -11,6 +11,10 @@
       "run_at": "document_start"
     }
   ],
+  "icons": { 
+      "16":  "images/icon16.png",
+      "48":  "images/icon48.png",
+      "128": "images/icon128.png" },
   "web_accessible_resources": [
     "js/catstats.js"
   ]
